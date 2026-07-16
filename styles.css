@@ -1,0 +1,107 @@
+/* ============================================================
+   memories of me — embedded music-video player
+   Landing (white, brand type, play arrow) → plays clay & kelsy's
+   actual video. Desktop shows the 16:9 cut; a narrow / portrait
+   viewport switches to the vertical cut. Clean, framed, on-brand.
+   ============================================================ */
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  background: #fff;             /* opens on white to match the landing — no flash */
+  color: #111;
+  font-family: "Courier Prime", "Courier New", Courier, monospace;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------------- THE PLAYER ---------------- */
+.stage {
+  position: fixed;
+  inset: 0;
+  background: #fff;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  z-index: 1;
+  opacity: 0;
+  transition: opacity .25s ease;
+}
+.stage.is-live { opacity: 1; }
+.stage.is-black { background: #000; }   /* the video ends on black — carry it to the frame */
+
+.film {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;            /* fills the whole screen at any size */
+  display: block;
+  background: #000;
+}
+
+/* ---------------- LANDING ---------------- */
+.landing {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: #fff;
+  color: #111;
+  display: grid;
+  place-items: center;
+  transition: opacity .5s ease;
+}
+.landing.is-gone { opacity: 0; pointer-events: none; }
+.landing__mark { text-align: center; padding: 6vw; }
+.landing__eyebrow {
+  font-family: "Courier Prime", monospace;
+  text-transform: uppercase;
+  letter-spacing: .34em;
+  font-size: clamp(11px, 1.4vw, 15px);
+  color: #111;
+  margin-left: .34em;
+  margin-bottom: 2.2rem;
+}
+.landing__title {
+  font-family: "Playfair Display", Georgia, serif;
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: .005em;
+  font-size: clamp(40px, 9.5vw, 128px);
+  line-height: .98;
+  color: #111;
+  margin-bottom: 2.6rem;
+}
+.playbtn {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 1.2rem; background: none; border: none; cursor: pointer;
+  transition: transform .18s ease, opacity .3s ease;
+}
+.playbtn:hover { transform: scale(1.08); }
+.playbtn:active { transform: scale(0.96); }
+.playbtn:focus-visible { outline: 2px solid #111; outline-offset: 6px; border-radius: 4px; }
+.playbtn.is-loading { opacity: .5; pointer-events: none; }
+.playbtn__tri {
+  width: 0; height: 0; border-style: solid;
+  border-width: clamp(20px, 3.4vw, 38px) 0 clamp(20px, 3.4vw, 38px) clamp(32px, 5.4vw, 58px);
+  border-color: transparent transparent transparent #111;
+}
+
+/* ---------------- END CARD ---------------- */
+.endcard {
+  position: fixed; inset: 0; z-index: 35;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 1.6rem; background: rgba(0,0,0,0); transition: background .6s ease;
+}
+.endcard.is-visible { background: #000; }   /* the video ends on black */
+.endcard__link, .endcard__btn {
+  background: none; border: none; color: #eaeaea;
+  font-family: "Courier Prime", monospace; text-transform: uppercase; letter-spacing: .3em;
+  font-size: clamp(14px, 2vw, 20px); text-decoration: none; cursor: pointer;
+  opacity: 0; transition: opacity .5s ease .3s, color .18s ease;
+}
+.endcard__link:hover, .endcard__btn:hover { color: #999; }
+.endcard.is-visible .endcard__link,
+.endcard.is-visible .endcard__btn { opacity: 1; }
+
+[hidden] { display: none !important; }

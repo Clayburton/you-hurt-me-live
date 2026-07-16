@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <!-- iOS Safari tints its status bar + toolbar to match this; the player flips it to #000 for the final act -->
+  <meta name="theme-color" content="#ffffff" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>you hurt me — clay and kelsy</title>
+
+  <!-- brand faces: Courier Prime (mono nav) + Playfair (the title) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="styles.css?v=13" />
+</head>
+<body>
+  <!-- ============ THE PLAYER ============ -->
+  <div id="stage" class="stage" aria-hidden="true">
+    <video id="film" class="film" playsinline preload="metadata"></video>
+  </div>
+
+  <!-- ============ LANDING ============ -->
+  <section id="landing" class="landing">
+    <div class="landing__mark">
+      <div class="landing__eyebrow">clay and kelsy</div>
+      <h1 class="landing__title">you hurt me</h1>
+      <button id="playBtn" class="playbtn" type="button" aria-label="Play">
+        <span class="playbtn__tri" aria-hidden="true"></span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ============ END CARD ============ -->
+  <section id="endcard" class="endcard" hidden>
+    <a id="goBack" class="endcard__link" href="https://clayandkelsy.com/i-am/" target="_top" rel="noopener">[ go back ]</a>
+    <button id="replayBtn" class="endcard__btn" type="button">[ replay ]</button>
+  </section>
+
+  <script src="app.js?v=14"></script>
+</body>
+</html>
