@@ -111,8 +111,15 @@ body.playing { overscroll-behavior: none; touch-action: none; }
   transition: font-size .25s ease;
 }
 #weapon.is-here { opacity: 1; }
-#weapon.is-swing { animation: gswing .16s ease; }
-@keyframes gswing { 40% { transform: translate(-30%,-72%) rotate(-56deg) scale(1.14); } }
+#weapon.is-swing  { animation: gswing .16s ease; }
+#weapon.is-stab   { animation: gstab .14s ease; }     /* thrust toward the strike */
+#weapon.is-sawing { animation: gsawing .2s ease; }    /* back and forth along the blade */
+@keyframes gswing  { 40% { transform: translate(-30%,-72%) rotate(-56deg) scale(1.14); } }
+@keyframes gstab   { 35% { transform: translate(calc(-30% - 12px), calc(-72% - 13px)) rotate(-8deg); } }
+@keyframes gsawing {
+  25% { transform: translate(calc(-30% - 8px), calc(-72% - 8px)) rotate(-8deg); }
+  75% { transform: translate(calc(-30% + 8px), calc(-72% + 8px)) rotate(-8deg); }
+}
 @media (pointer: coarse) { #weapon { display: none !important; } }
 
 #scars { position: absolute; inset: 0; z-index: 2; pointer-events: none; }

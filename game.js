@@ -10,17 +10,17 @@
 
   /* ---------- the arsenal, ranked by danger ---------- */
   const WEAPONS = {
-    fist:     { e:"👊", name:"fist",     dmg:1,  cd:160, tier:1 },
-    glove:    { e:"🥊", name:"glove",    dmg:1,  cd:90,  tier:2 },                    // fast hands
-    hammer:   { e:"🔨", name:"hammer",   dmg:2,  cd:240, tier:2, splash:0.12, splashDmg:0.6 },
-    axe:      { e:"🪓", name:"axe",      dmg:2,  cd:200, tier:3, crit:0.35, critX:3 },
-    pickaxe:  { e:"⛏️", name:"pickaxe",  dmg:3,  cd:250, tier:3, reach:0.09 },        // bites what it aims at
-    knife:    { e:"🔪", name:"knife",    dmg:2,  cd:100, tier:4 },
-    sword:    { e:"🗡️", name:"sword",    dmg:5,  cd:320, tier:4 },
-    saw:      { e:"🪚", name:"saw",      dmg:3,  cd:90,  tier:5 },                    // grinds fast
-    dynamite: { e:"🧨", name:"dynamite", dmg:7,  cd:340, tier:5, splash:0.16, splashDmg:1 },
-    slugger:  { img:"assets/ding/slugger.png", name:"bat", dmg:12, cd:300, tier:6, scar:1 },
-    bomb:     { e:"💣", name:"bomb",     dmg:10, cd:420, tier:6, splash:0.22, splashDmg:1, scar:2 },
+    fist:     { e:"👊", name:"fist",     dmg:1,  tier:1 },
+    glove:    { e:"🥊", name:"glove",    dmg:1,  tier:2 },
+    hammer:   { e:"🔨", name:"hammer",   dmg:2,  tier:2, splash:0.12, splashDmg:0.6 },
+    axe:      { e:"🪓", name:"axe",      dmg:2,  tier:3, crit:0.35, critX:3 },
+    pickaxe:  { e:"⛏️", name:"pickaxe",  dmg:3,  tier:3, reach:0.09 },                 // bites what it aims at
+    knife:    { e:"🔪", name:"knife",    dmg:2,  tier:4, wrot:180, anim:"stab" },      // blade toward the strike
+    sword:    { e:"🗡️", name:"sword",    dmg:5,  tier:4, wrot:90,  anim:"stab" },
+    saw:      { e:"🪚", name:"saw",      dmg:3,  tier:5, anim:"sawing", scar:0.5 },    // grinds — and nicks the wall
+    dynamite: { e:"🧨", name:"dynamite", dmg:7,  tier:5, splash:0.16, splashDmg:1, scar:0.5 },
+    slugger:  { img:"assets/ding/slugger.png", name:"bat", dmg:12, tier:6, scar:1 },
+    bomb:     { e:"💣", name:"bomb",     dmg:10, tier:6, splash:0.22, splashDmg:1, scar:2 },
   };
   const UPGRADES = {           // level → the two boxes
     2: ["glove", "hammer"],
@@ -29,8 +29,11 @@
     5: ["saw", "dynamite"],
     6: ["slugger", "bomb"],
   };
-  const XP_NEED = [0, 18, 54, 120, 220, 380];   // cumulative XP to reach level 2..6
-  const PAR = [[40, 2], [80, 3], [120, 4], [160, 5]];  // rubber-band: behind par → 1.5x XP
+  const XP_NEED = [0, 40, 110, 240, 420, 700];  // cumulative XP to reach level 2..6
+  const PAR = [[45, 2], [85, 3], [125, 4], [165, 5]];  // rubber-band: behind par → 1.5x XP
+  // later-song words where letters die one by one (killing a letter doesn't kill the word)
+  const LETTERKILL = [113.647, 114.348, 116.483, 118.952, 165.301, 179.379, 183.083, 184.918, 186.82, 197.23];
+  const LETTER_HP = 4;
 
   /* ---------- bosses: the song's loudest words fight hardest ---------- */
   const BOSS = [   // [cue start time, hp]
@@ -67,7 +70,9 @@
         if (cue.fit && cue.fit >= 0.6) hp += 6;
         if (cue.text === "(why?)") hp = 1;               // the storm: one swat each
       }
-      w = { hp: hp, maxHp: hp, dead: false, wounds: 0, evade: { x: 0, y: 0 } };
+      w = { hp: hp, maxHp: hp, dead: false, wounds: 0, evade: { x: 0, y: 0 }, applied: { x: 0, y: 0 },
+            letterKill: LETTERKILL.some(function (t) { return Math.abs(t - cue.s) < 0.02; }),
+            deadChars: null };
       st.words.set(idx, w);
     }
     return w;
@@ -78,24 +83,31 @@
     if (el.dataset.spanned || el.querySelector("img") || el.querySelector(".ch")) return;
     const t = el.textContent;
     el.textContent = "";
+    let ci = 0;
     for (const ch of t) {
       if (ch === "\n") { el.appendChild(document.createTextNode("\n")); continue; }
       const s = document.createElement("span");
       s.className = "gch";
+      s.dataset.ci = ci++;
       s.textContent = ch;
       el.appendChild(s);
     }
     el.dataset.spanned = "1";
   }
-  function woundAt(el, x, y, deep) {
-    // find the letter under the strike and hurt IT
+  function nearestSpan(el, x, y) {
     spanify(el);
     let best = null, bd = 1e9;
     el.querySelectorAll(".gch").forEach(function (s) {
+      if (s.dataset.dead) return;
       const r = s.getBoundingClientRect();
       const d = Math.hypot(x - (r.left + r.width / 2), y - (r.top + r.height / 2));
       if (d < bd) { bd = d; best = s; }
     });
+    return best;
+  }
+  function woundAt(el, x, y, deep) {
+    // find the letter under the strike and hurt IT
+    const best = nearestSpan(el, x, y);
     if (!best) { el.classList.add("g-jolt"); setTimeout(() => el.classList.remove("g-jolt"), 160); return; }
     const n = (+best.dataset.d || 0) + 1;
     best.dataset.d = n;
@@ -110,6 +122,21 @@
     // and the letter burns redder with every hit
     best.style.color = ["#000", "#7a0000", "#b40000", "#e00000", "#ff1a00"][Math.min(n, 4)];
     if (n >= 4) best.style.opacity = Math.max(0.3, 1 - 0.14 * n);
+    return best;
+  }
+
+  /* one letter dies — the word lives on */
+  function popLetter(el, span, w) {
+    span.dataset.dead = "1";
+    if (!w.deadChars) w.deadChars = {};
+    w.deadChars[span.dataset.ci] = 1;
+    span.style.transition = "transform .34s ease-in, opacity .3s ease-in";
+    span.style.transform = "translate(" + ((Math.random() - 0.5) * 50) + "px," + (18 + Math.random() * 40) + "px) rotate(" + ((Math.random() - 0.5) * 140) + "deg)";
+    span.style.opacity = 0;
+    gainXp(3);
+    // the whole word only dies when every letter has been taken
+    const alive = [...el.querySelectorAll(".gch")].filter(function (s) { return !s.dataset.dead && s.textContent.trim(); });
+    return alive.length === 0;
   }
 
   /* ---------- kill ---------- */
@@ -156,15 +183,17 @@
     clearTimeout(lvlEl._t);
     lvlEl._t = setTimeout(function () { if (st.choosing === next) equip(pair[0], next); }, 8000);
   }
-  function weaponFace(w) {
-    return w.img ? '<img class="wimg" src="' + w.img + '" alt="">' : w.e;
+  function weaponFace(w, oriented) {
+    const face = w.img ? '<img class="wimg" src="' + w.img + '" alt="">' : w.e;
+    if (oriented && w.wrot) return '<span class="wface" style="display:block;transform:rotate(' + w.wrot + 'deg)">' + face + "</span>";
+    return face;
   }
   function equip(key, level) {
     st.weapon = WEAPONS[key];
     st.level = level;
     st.choosing = null;
     lvlEl.classList.remove("is-on");
-    weaponEl.innerHTML = weaponFace(st.weapon);
+    weaponEl.innerHTML = weaponFace(st.weapon, true);
     weaponEl.style.fontSize = (34 + 3 * st.weapon.tier) + "px";
     if (st.level >= 6) {                    // the top of the ladder
       clearTimeout(lvlEl._t);
@@ -177,26 +206,30 @@
   }
 
   /* ---------- background scars (permanent — max tier only) ---------- */
-  function scar(x, y, big) {
-    const c = scarCtx, R = big ? 90 : 55;
+  function scar(x, y, size) {                       // 0.5 = a nick, 1 = a wound, 2 = a blast
+    const c = scarCtx;
+    const R = size >= 2 ? 90 : size >= 1 ? 55 : 20;
+    const soot = size >= 2 ? 26 : size >= 1 ? 14 : 4;
+    const cracks = size >= 2 ? 7 : size >= 1 ? 4 : 1;
+    const seg = size >= 2 ? 34 : size >= 1 ? 18 : 9;
     c.save();
     c.translate(x, y);
-    for (let i = 0; i < (big ? 26 : 14); i++) {     // soot
+    for (let i = 0; i < soot; i++) {
       const a = Math.random() * 6.283, d = Math.random() * R;
       c.fillStyle = "rgba(0,0,0," + (0.04 + Math.random() * 0.12) + ")";
-      const s = 2 + Math.random() * (big ? 14 : 8);
+      const s = 2 + Math.random() * (size >= 2 ? 14 : size >= 1 ? 8 : 4);
       c.fillRect(Math.cos(a) * d - s / 2, Math.sin(a) * d - s / 2, s, s);
     }
-    for (let i = 0; i < (big ? 7 : 4); i++) {       // cracks
+    for (let i = 0; i < cracks; i++) {
       let a = Math.random() * 6.283, px = 0, py = 0;
       c.strokeStyle = "rgba(0,0,0," + (0.5 + Math.random() * 0.4) + ")";
-      c.lineWidth = Math.random() < 0.3 ? 2 : 1;
+      c.lineWidth = size >= 1 && Math.random() < 0.3 ? 2 : 1;
       c.beginPath(); c.moveTo(0, 0);
       const segs = 4 + (Math.random() * 4 | 0);
       for (let sgi = 0; sgi < segs; sgi++) {
         a += (Math.random() - 0.5) * 1.1;
-        px += Math.cos(a) * (8 + Math.random() * (big ? 34 : 18));
-        py += Math.sin(a) * (8 + Math.random() * (big ? 34 : 18));
+        px += Math.cos(a) * (8 + Math.random() * seg);
+        py += Math.sin(a) * (8 + Math.random() * seg);
         c.lineTo(px, py);
       }
       c.stroke();
@@ -225,17 +258,20 @@
     });
     return out.sort(function (a, b) { return a.d - b.d; });
   }
-  function strike(x, y) {
-    const now = performance.now();
-    if (now - st.lastStrike < st.weapon.cd) return;
-    st.lastStrike = now;
-    weaponEl.classList.remove("is-swing"); void weaponEl.offsetWidth; weaponEl.classList.add("is-swing");
-
+  const ANIMS = ["is-swing", "is-stab", "is-sawing"];
+  function swingAnim() {
+    const cls = st.weapon.anim === "stab" ? "is-stab" : st.weapon.anim === "sawing" ? "is-sawing" : "is-swing";
+    ANIMS.forEach(function (c) { weaponEl.classList.remove(c); });
+    void weaponEl.offsetWidth;
+    weaponEl.classList.add(cls);
+  }
+  function strike(x, y) {           // no speed limit — hit as fast as you can click
+    swingAnim();
     const W = stage.clientWidth;
     const wp = st.weapon;
     const reach = (wp.reach || 0.045) * W;
     const hits = targetsAt(x, y, reach);
-    if (!hits.length) { if (wp.scar) { scar(x, y, wp.scar > 1); shake(6); } return; }
+    if (!hits.length) { if (wp.scar) { scar(x, y, wp.scar); shake(wp.tier); } return; }
 
     // primary target
     const h = hits[0];
@@ -250,15 +286,25 @@
         applyDamage(h2, Math.max(1, Math.round(wp.dmg * wp.splashDmg)), x, y);
       });
     }
-    if (wp.scar) { scar(x, y, wp.scar > 1); shake(6); }
+    if (wp.scar) { scar(x, y, wp.scar); shake(wp.tier); }
   }
   function applyDamage(h, dmg, x, y) {
     const w = wordState(h.idx, h.cue, h.el);
     if (w.dead) return;
-    w.hp -= dmg;
     st.hits++;
-    woundAt(h.el, x, y, st.weapon.tier >= 4);
     gainXp(dmg);
+    if (w.letterKill) {
+      // letters die one by one — the word survives its losses
+      const span = woundAt(h.el, x, y, st.weapon.tier >= 4);
+      if (span) {
+        const taken = (+span.dataset.hp || 0) + dmg;
+        span.dataset.hp = taken;
+        if (taken >= LETTER_HP && popLetter(h.el, span, w)) kill(h.idx, h.cue, h.el, w);
+      }
+      return;
+    }
+    w.hp -= dmg;
+    woundAt(h.el, x, y, st.weapon.tier >= 4);
     if (w.hp <= 0) kill(h.idx, h.cue, h.el, w);
   }
 
@@ -277,15 +323,25 @@
       const dx = cx - st.ptr.x, dy = cy - st.ptr.y;
       const d = Math.hypot(dx, dy);
       const R = flinch && lvl < 3 ? 90 : 120 + 20 * lvl;
-      const ev = (w || wordState(idx, cue, el)).evade;
+      const ws = w || wordState(idx, cue, el);
+      const ev = ws.evade;
       if (d < R && d > 1) {
-        const push = flinch && lvl < 3 ? 5 : [0, 0, 0, 8, 16, 30, 44][lvl];
+        // at the later levels the words will run all the way to the edges
+        const push = flinch && lvl < 3 ? 5 : [0, 0, 0, 8, 16, 90, 150][lvl];
         const k = (1 - d / R) * push;
         ev.x += ((dx / d) * k - ev.x) * 0.16;
         ev.y += ((dy / d) * k - ev.y) * 0.16;
       } else {
         ev.x *= 0.9; ev.y *= 0.9;
       }
+      // never let a word escape the screen entirely
+      const ap = ws.applied;
+      const baseL = r.left - ap.x, baseR = r.right - ap.x;
+      const baseT = r.top - ap.y, baseB = r.bottom - ap.y;
+      const W = stage.clientWidth, H = stage.clientHeight;
+      ev.x = Math.max(6 - baseL, Math.min((W - 6) - baseR, ev.x));
+      ev.y = Math.max(6 - baseT, Math.min((H - 6) - baseB, ev.y));
+      ap.x = ev.x; ap.y = ev.y;
       if (Math.abs(ev.x) > 0.2 || Math.abs(ev.y) > 0.2) el.style.translate = ev.x.toFixed(1) + "px " + ev.y.toFixed(1) + "px";
       else el.style.translate = "";
     });
@@ -318,52 +374,73 @@
 
       window.addEventListener("pointermove", function (e) {
         st.ptr.x = e.clientX; st.ptr.y = e.clientY;
-        if (st.on || st.endMode) {
+        if (st.on) {
           weaponEl.style.left = e.clientX + "px";
           weaponEl.style.top = e.clientY + "px";
           weaponEl.classList.add("is-here");
+          // drag = keep hurting: swipe a word to slash it (this is how fingers fight)
+          if (st.drag) {
+            const dx = e.clientX - st.drag.x, dy = e.clientY - st.drag.y;
+            st.drag.acc += Math.hypot(dx, dy);
+            st.drag.x = e.clientX; st.drag.y = e.clientY;
+            if (st.drag.acc >= 26) {
+              st.drag.acc = 0;
+              strike(e.clientX, e.clientY);
+            }
+          }
         }
       });
       window.addEventListener("mouseout", function (e) { if (!e.relatedTarget) weaponEl.classList.remove("is-here"); });
       stage.addEventListener("pointerdown", function (e) {
         if (!st.on) return;
         st.ptr.x = e.clientX; st.ptr.y = e.clientY;
+        st.drag = { x: e.clientX, y: e.clientY, acc: 0 };
         weaponEl.style.left = e.clientX + "px";
         weaponEl.style.top = e.clientY + "px";
         strike(e.clientX, e.clientY);
         e.preventDefault();
       });
-      // the song is over, but you can keep wrecking the background
+      window.addEventListener("pointerup", function () { st.drag = null; });
+      window.addEventListener("pointercancel", function () { st.drag = null; });
+      // the song is over, but you can keep wrecking the background (plain cursor now)
       document.getElementById("endcard").addEventListener("pointerdown", function (e) {
         if (!st.endMode) return;
         if (e.target.closest(".endcard__link, .endcard__btn")) return;
-        weaponEl.style.left = e.clientX + "px";
-        weaponEl.style.top = e.clientY + "px";
-        weaponEl.classList.remove("is-swing"); void weaponEl.offsetWidth; weaponEl.classList.add("is-swing");
-        scar(e.clientX, e.clientY, st.weapon.tier >= 6);
-        shake(st.weapon.tier >= 6 ? 6 : 4);
+        scar(e.clientX, e.clientY, st.weapon.scar || 1);
+        shake(st.weapon.tier);
       });
     },
     start: function () {         // fresh run (play or replay)
       st.on = true;
       st.endMode = false;
+      st.drag = null;
       st.weapon = WEAPONS.fist; st.level = 1; st.xp = 0; st.hits = 0; st.kills = 0;
       st.words.clear(); st.choosing = null;
       scarCtx.clearRect(0, 0, scarCv.width, scarCv.height);
       lvlEl.classList.remove("is-on");
-      weaponEl.innerHTML = weaponFace(WEAPONS.fist);
+      weaponEl.innerHTML = weaponFace(WEAPONS.fist, true);
       weaponEl.style.fontSize = "37px";
       document.body.classList.add("gaming");
     },
     onMount: function (idx, cue, el) {
       const w = st.words.get(idx);
-      if (w && w.dead) el.style.visibility = "hidden";     // dead stays dead (strobes, remounts)
+      if (!w) return;
+      if (w.dead) { el.style.visibility = "hidden"; return; }   // dead stays dead (strobes, remounts)
+      if (w.deadChars) {                                        // lost letters stay lost (resize remounts)
+        spanify(el);
+        el.querySelectorAll(".gch").forEach(function (s) {
+          if (w.deadChars[s.dataset.ci]) { s.dataset.dead = "1"; s.style.opacity = 0; }
+        });
+      }
     },
     onUnmount: function () {},
     tick: function () { if (st.on) evasion(); },
     onEnd: function () {
       st.on = false;
       st.endMode = true;          // the wrecking doesn't have to stop
+      st.drag = null;
+      document.body.classList.remove("gaming");      // plain cursor on the go-back page
+      weaponEl.classList.remove("is-here");          // the weapon bows out
       const v = document.getElementById("verdict");
       if (v) {
         if (st.hits > 0) {
