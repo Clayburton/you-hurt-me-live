@@ -10,37 +10,37 @@
 
   /* ---------- the arsenal, ranked by danger ---------- */
   const WEAPONS = {
-    bat:      { e:"🏏", name:"bat",      dmg:1,  cd:220, tier:1 },
-    glove:    { e:"🥊", name:"glove",    dmg:1,  cd:110, tier:2 },                    // fast hands
-    hammer:   { e:"🔨", name:"hammer",   dmg:2,  cd:300, tier:2, splash:0.10, splashDmg:0.6 },
-    axe:      { e:"🪓", name:"axe",      dmg:2,  cd:260, tier:3, crit:0.3, critX:3 },
-    pickaxe:  { e:"⛏️", name:"pickaxe",  dmg:3,  cd:320, tier:3, reach:0.08 },        // bites what it aims at
-    knife:    { e:"🔪", name:"knife",    dmg:2,  cd:130, tier:4 },
-    sword:    { e:"🗡️", name:"sword",    dmg:5,  cd:400, tier:4 },
-    swords:   { e:"⚔️", name:"swords",   dmg:5,  cd:340, tier:5, splash:0.14, splashDmg:1 },
-    bow:      { e:"🏹", name:"bow",      dmg:6,  cd:380, tier:5, reach:0.30 },        // strikes from afar
-    dynamite: { e:"🧨", name:"dynamite", dmg:8,  cd:420, tier:6, splash:0.16, splashDmg:1, scar:1 },
-    bomb:     { e:"💣", name:"bomb",     dmg:10, cd:520, tier:6, splash:0.22, splashDmg:1, scar:2 },
+    fist:     { e:"👊", name:"fist",     dmg:1,  cd:160, tier:1 },
+    glove:    { e:"🥊", name:"glove",    dmg:1,  cd:90,  tier:2 },                    // fast hands
+    hammer:   { e:"🔨", name:"hammer",   dmg:2,  cd:240, tier:2, splash:0.12, splashDmg:0.6 },
+    axe:      { e:"🪓", name:"axe",      dmg:2,  cd:200, tier:3, crit:0.35, critX:3 },
+    pickaxe:  { e:"⛏️", name:"pickaxe",  dmg:3,  cd:250, tier:3, reach:0.09 },        // bites what it aims at
+    knife:    { e:"🔪", name:"knife",    dmg:2,  cd:100, tier:4 },
+    sword:    { e:"🗡️", name:"sword",    dmg:5,  cd:320, tier:4 },
+    saw:      { e:"🪚", name:"saw",      dmg:3,  cd:90,  tier:5 },                    // grinds fast
+    dynamite: { e:"🧨", name:"dynamite", dmg:7,  cd:340, tier:5, splash:0.16, splashDmg:1 },
+    slugger:  { img:"assets/ding/slugger.png", name:"bat", dmg:12, cd:300, tier:6, scar:1 },
+    bomb:     { e:"💣", name:"bomb",     dmg:10, cd:420, tier:6, splash:0.22, splashDmg:1, scar:2 },
   };
   const UPGRADES = {           // level → the two boxes
     2: ["glove", "hammer"],
     3: ["axe", "pickaxe"],
     4: ["knife", "sword"],
-    5: ["swords", "bow"],
-    6: ["dynamite", "bomb"],
+    5: ["saw", "dynamite"],
+    6: ["slugger", "bomb"],
   };
-  const XP_NEED = [0, 15, 45, 100, 190, 340];   // cumulative XP to reach level 2..6
+  const XP_NEED = [0, 18, 54, 120, 220, 380];   // cumulative XP to reach level 2..6
   const PAR = [[40, 2], [80, 3], [120, 4], [160, 5]];  // rubber-band: behind par → 1.5x XP
 
   /* ---------- bosses: the song's loudest words fight hardest ---------- */
   const BOSS = [   // [cue start time, hp]
-    [21.822, 10],   // HEY!
-    [29.363, 12],   // the saaay wall
-    [44.878, 16],   // YOU NEVER ASKED ME
-    [72.639, 20],   // CHOICE.
-    [95.696, 20],   // the giant strobing hey
-    [165.301, 22],  // you hurt me (the hold)
-    [204.537, 30],  // WHY DON'T YOU SAY IT?
+    [21.822, 16],   // HEY!
+    [29.363, 18],   // the saaay wall
+    [44.878, 24],   // YOU NEVER ASKED ME
+    [72.639, 30],   // CHOICE.
+    [95.696, 30],   // the giant strobing hey
+    [165.301, 33],  // you hurt me (the hold)
+    [204.537, 45],  // WHY DON'T YOU SAY IT?
   ];
   // gentle lyric flinch — ONLY the later walk-away lines, and barely (nothing is scared early)
   const FLINCH = [40.641, 92.459];
@@ -63,8 +63,8 @@
       if (boss) hp = boss[1];
       else {
         const life = cue.e - cue.s;
-        hp = life < 0.3 ? 1 : life < 1 ? 3 : life < 2 ? 6 : 8;
-        if (cue.fit && cue.fit >= 0.6) hp += 4;
+        hp = life < 0.3 ? 2 : life < 1 ? 5 : life < 2 ? 9 : 12;
+        if (cue.fit && cue.fit >= 0.6) hp += 6;
         if (cue.text === "(why?)") hp = 1;               // the storm: one swat each
       }
       w = { hp: hp, maxHp: hp, dead: false, wounds: 0, evade: { x: 0, y: 0 } };
@@ -102,31 +102,14 @@
     const a = (Math.random() - 0.5) * (8 + 6 * n);
     const dx = (Math.random() - 0.5) * 2 * n, dy = (Math.random() - 0.5) * 2 * n;
     best.style.transform = "translate(" + dx + "px," + dy + "px) rotate(" + a + "deg)";
-    if (deep || n >= 2) {   // a bite taken out of the glyph
-      const bx = 15 + Math.random() * 70, by = 10 + Math.random() * 55, r = 14 + 12 * Math.min(n, 4) + (deep ? 12 : 0);
-      best.style.clipPath =
-        "polygon(0 0,100% 0,100% 100%,0 100%,0 " + by + "%," + bx + "% " + by + "%," +
-        (bx + r * 0.6) + "% " + (by + r) + "%," + Math.max(0, bx - r * 0.4) + "% " + (by + r * 0.5) + "%,0 " + (by + r * 0.8) + "%)";
-    }
-    if (n >= 3) best.style.opacity = Math.max(0.25, 1 - 0.18 * n);
-  }
-
-  /* ---------- HP tag above the word ---------- */
-  function showHp(el, w) {
-    let tag = el._hp;
-    if (!tag) {
-      tag = document.createElement("div");
-      tag.className = "g-hp";
-      stage.appendChild(tag);
-      el._hp = tag;
-    }
-    const r = el.getBoundingClientRect();
-    tag.textContent = w.hp;
-    tag.style.left = (r.left + r.width / 2) + "px";
-    tag.style.top = (r.top - 20) + "px";
-    tag.classList.add("is-on");
-    clearTimeout(tag._t);
-    tag._t = setTimeout(function () { tag.classList.remove("is-on"); }, 900);
+    // every hit takes a bite out of the glyph — even the first fist
+    const bx = 15 + Math.random() * 70, by = 10 + Math.random() * 55, r = 12 + 12 * Math.min(n, 4) + (deep ? 12 : 0);
+    best.style.clipPath =
+      "polygon(0 0,100% 0,100% 100%,0 100%,0 " + by + "%," + bx + "% " + by + "%," +
+      (bx + r * 0.6) + "% " + (by + r) + "%," + Math.max(0, bx - r * 0.4) + "% " + (by + r * 0.5) + "%,0 " + (by + r * 0.8) + "%)";
+    // and the letter burns redder with every hit
+    best.style.color = ["#000", "#7a0000", "#b40000", "#e00000", "#ff1a00"][Math.min(n, 4)];
+    if (n >= 4) best.style.opacity = Math.max(0.3, 1 - 0.14 * n);
   }
 
   /* ---------- kill ---------- */
@@ -142,7 +125,6 @@
     } else {
       el.classList.add("g-dead");
     }
-    if (el._hp) el._hp.classList.remove("is-on");
     setTimeout(function () { el.style.visibility = "hidden"; }, 400);
     if (st.weapon.tier >= 3) shake(st.weapon.tier);
     gainXp(Math.ceil(w.maxHp / 2) + (cue.text === "(why?)" ? 5 : 0));
@@ -162,7 +144,7 @@
       '<div class="g-lvltext">LEVEL UP</div><div class="g-boxes">' +
       pair.map(function (k) {
         const w = WEAPONS[k];
-        return '<button class="g-box" data-w="' + k + '"><span class="g-boxe">' + w.e + '</span><span class="g-boxn">' + w.name + "</span></button>";
+        return '<button class="g-box" data-w="' + k + '"><span class="g-boxe">' + weaponFace(w) + '</span><span class="g-boxn">' + w.name + "</span></button>";
       }).join("") + "</div>";
     lvlEl.classList.add("is-on");
     lvlEl.querySelectorAll(".g-box").forEach(function (b) {
@@ -174,14 +156,24 @@
     clearTimeout(lvlEl._t);
     lvlEl._t = setTimeout(function () { if (st.choosing === next) equip(pair[0], next); }, 8000);
   }
+  function weaponFace(w) {
+    return w.img ? '<img class="wimg" src="' + w.img + '" alt="">' : w.e;
+  }
   function equip(key, level) {
     st.weapon = WEAPONS[key];
     st.level = level;
     st.choosing = null;
     lvlEl.classList.remove("is-on");
-    weaponEl.textContent = st.weapon.e;
+    weaponEl.innerHTML = weaponFace(st.weapon);
     weaponEl.style.fontSize = (34 + 3 * st.weapon.tier) + "px";
-    if (st.level < 6 && st.xp >= XP_NEED[st.level]) offerUpgrade(st.level + 1);
+    if (st.level >= 6) {                    // the top of the ladder
+      clearTimeout(lvlEl._t);
+      setTimeout(function () {
+        lvlEl.innerHTML = '<div class="g-lvltext">MAX LEVEL</div>';
+        lvlEl.classList.add("is-on");
+        lvlEl._t = setTimeout(function () { lvlEl.classList.remove("is-on"); }, 2400);
+      }, 220);
+    } else if (st.xp >= XP_NEED[st.level]) offerUpgrade(st.level + 1);
   }
 
   /* ---------- background scars (permanent — max tier only) ---------- */
@@ -268,7 +260,6 @@
     woundAt(h.el, x, y, st.weapon.tier >= 4);
     gainXp(dmg);
     if (w.hp <= 0) kill(h.idx, h.cue, h.el, w);
-    else showHp(h.el, w);
   }
 
   /* ---------- evasion: the words learn to fear you ---------- */
@@ -323,9 +314,11 @@
       fit();
       window.addEventListener("resize", fit);
 
+      new Image().src = "assets/ding/slugger.png";     // warm the max-level bat
+
       window.addEventListener("pointermove", function (e) {
         st.ptr.x = e.clientX; st.ptr.y = e.clientY;
-        if (st.on) {
+        if (st.on || st.endMode) {
           weaponEl.style.left = e.clientX + "px";
           weaponEl.style.top = e.clientY + "px";
           weaponEl.classList.add("is-here");
@@ -340,29 +333,37 @@
         strike(e.clientX, e.clientY);
         e.preventDefault();
       });
+      // the song is over, but you can keep wrecking the background
+      document.getElementById("endcard").addEventListener("pointerdown", function (e) {
+        if (!st.endMode) return;
+        if (e.target.closest(".endcard__link, .endcard__btn")) return;
+        weaponEl.style.left = e.clientX + "px";
+        weaponEl.style.top = e.clientY + "px";
+        weaponEl.classList.remove("is-swing"); void weaponEl.offsetWidth; weaponEl.classList.add("is-swing");
+        scar(e.clientX, e.clientY, st.weapon.tier >= 6);
+        shake(st.weapon.tier >= 6 ? 6 : 4);
+      });
     },
     start: function () {         // fresh run (play or replay)
       st.on = true;
-      st.weapon = WEAPONS.bat; st.level = 1; st.xp = 0; st.hits = 0; st.kills = 0;
+      st.endMode = false;
+      st.weapon = WEAPONS.fist; st.level = 1; st.xp = 0; st.hits = 0; st.kills = 0;
       st.words.clear(); st.choosing = null;
       scarCtx.clearRect(0, 0, scarCv.width, scarCv.height);
       lvlEl.classList.remove("is-on");
-      weaponEl.textContent = WEAPONS.bat.e;
+      weaponEl.innerHTML = weaponFace(WEAPONS.fist);
       weaponEl.style.fontSize = "37px";
-      document.querySelectorAll(".g-hp").forEach(function (t) { t.remove(); });
       document.body.classList.add("gaming");
     },
     onMount: function (idx, cue, el) {
       const w = st.words.get(idx);
       if (w && w.dead) el.style.visibility = "hidden";     // dead stays dead (strobes, remounts)
     },
-    onUnmount: function (idx, el) {
-      if (el && el._hp) { el._hp.remove(); el._hp = null; }
-    },
+    onUnmount: function () {},
     tick: function () { if (st.on) evasion(); },
     onEnd: function () {
       st.on = false;
-      document.body.classList.remove("gaming");
+      st.endMode = true;          // the wrecking doesn't have to stop
       const v = document.getElementById("verdict");
       if (v) {
         if (st.hits > 0) {

@@ -354,8 +354,15 @@
   })();
 
   /* ---------- flow ---------- */
+  let started = false;
   function start() {
-    if (!assetsReady) return;
+    if (!assetsReady || started) return;
+    started = true;
+    // the arrow takes the first hit — a hint of what you can do in there
+    playBtn.classList.add("is-hit");
+    setTimeout(reallyStart, 240);
+  }
+  function reallyStart() {
     landing.classList.add("is-gone");
     setTimeout(function () { landing.hidden = true; }, 500);
     stage.classList.add("is-live");

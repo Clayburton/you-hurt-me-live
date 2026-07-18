@@ -122,19 +122,8 @@ body.playing { overscroll-behavior: none; touch-action: none; }
 .g-jolt { animation: gjolt .16s ease; }
 @keyframes gjolt { 50% { opacity: .55; } }
 
-.g-hp {
-  position: absolute;
-  transform: translate(-50%, -100%);
-  font-family: var(--mono);
-  font-size: 12px;
-  font-weight: 700;
-  color: #000;
-  z-index: 38;
-  opacity: 0;
-  transition: opacity .15s ease;
-  pointer-events: none;
-}
-.g-hp.is-on { opacity: 1; }
+#weapon .wimg { height: 1.05em; width: auto; display: block; }
+.g-boxe .wimg { height: 30px; width: auto; display: block; }
 
 #lvlup {
   position: fixed;
@@ -216,6 +205,13 @@ body.playing { overscroll-behavior: none; touch-action: none; }
 .playbtn:hover { transform: scale(1.08); }
 .playbtn:active { transform: scale(0.96); }
 .playbtn:focus-visible { outline: 2px solid #111; outline-offset: 6px; border-radius: 4px; }
+/* clicking play is the first hit — the arrow bleeds and recoils */
+.playbtn.is-hit { animation: phit .32s ease; }
+.playbtn.is-hit .playbtn__tri { border-color: transparent transparent transparent #c40000; }
+@keyframes phit {
+  25% { transform: translate(9px, -3px) rotate(10deg) scale(.9); }
+  60% { transform: translate(-3px, 2px) rotate(-4deg) scale(1.02); }
+}
 .playbtn__tri {
   width: 0; height: 0;
   border-style: solid;
