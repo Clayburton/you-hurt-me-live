@@ -91,6 +91,90 @@ body.playing { overscroll-behavior: none; touch-action: none; }
   -webkit-text-stroke: 0.035em var(--fg);
 }
 
+/* ---------------- THE GAME ----------------
+   The cursor becomes a weapon; the lyrics take the damage.
+   Everything monochrome — wounds are displacement, bites and cracks. */
+@media (pointer: fine) {
+  body.gaming, body.gaming .cue { cursor: none; }
+}
+#weapon {
+  position: fixed;
+  left: -100px; top: -100px;
+  z-index: 60;
+  font-size: 37px;
+  line-height: 1;
+  transform: translate(-30%, -72%) rotate(-8deg);
+  pointer-events: none;
+  opacity: 0;
+  will-change: left, top;
+  filter: drop-shadow(0 2px 2px rgba(0,0,0,.16));
+  transition: font-size .25s ease;
+}
+#weapon.is-here { opacity: 1; }
+#weapon.is-swing { animation: gswing .16s ease; }
+@keyframes gswing { 40% { transform: translate(-30%,-72%) rotate(-56deg) scale(1.14); } }
+@media (pointer: coarse) { #weapon { display: none !important; } }
+
+#scars { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+
+.gch { display: inline-block; }               /* letters take wounds one by one */
+.g-dead { transition: transform .35s ease-in, opacity .3s ease-in; transform: scale(.86) rotate(5deg); opacity: 0 !important; }
+.g-jolt { animation: gjolt .16s ease; }
+@keyframes gjolt { 50% { opacity: .55; } }
+
+.g-hp {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: #000;
+  z-index: 38;
+  opacity: 0;
+  transition: opacity .15s ease;
+  pointer-events: none;
+}
+.g-hp.is-on { opacity: 1; }
+
+#lvlup {
+  position: fixed;
+  left: 50%; bottom: 9%;
+  transform: translateX(-50%);
+  z-index: 45;
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .18s ease;
+}
+#lvlup.is-on { opacity: 1; pointer-events: auto; }
+.g-lvltext { font-family: var(--mono); font-size: 13px; letter-spacing: .34em; margin-bottom: 10px; color: #000; }
+.g-boxes { display: flex; gap: 12px; justify-content: center; }
+.g-box {
+  width: 76px;
+  padding: 9px 6px 7px;
+  background: #fff;
+  border: 1.5px solid #000;
+  border-radius: 0;
+  cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  font-family: var(--mono);
+  color: #000;
+}
+.g-box:hover { background: #000; color: #fff; }
+.g-boxe { font-size: 30px; line-height: 1.15; }
+.g-boxn { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; }
+
+#verdict {
+  font-family: var(--mono);
+  font-size: clamp(13px, 1.8vw, 18px);
+  letter-spacing: .2em;
+  color: #111;
+  margin-bottom: .6rem;
+  opacity: 0;
+  transition: opacity .5s ease .3s;
+}
+.endcard.is-visible #verdict { opacity: 1; }
+
 /* ---------------- LANDING ---------------- */
 .landing {
   position: fixed;
@@ -171,7 +255,7 @@ body.playing { overscroll-behavior: none; touch-action: none; }
   background: rgba(255,255,255,0);
   transition: background .6s ease;
 }
-.endcard.is-visible { background: rgba(255,255,255,.9); }
+.endcard.is-visible { background: rgba(255,255,255,.55); }   /* the damage you did shows through */
 .endcard__link, .endcard__btn {
   background: none; border: none; color: #111;
   font-family: var(--mono);

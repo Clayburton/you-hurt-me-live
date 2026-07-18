@@ -63,6 +63,7 @@
   function setText(el, cue, text) {
     if (el.dataset.txt === text) return;
     el.dataset.txt = text;
+    delete el.dataset.spanned;               // game letter-spans die with the old text
     if (cue.fx === "arch") {
       el.textContent = "";
       const chars = text.split("");
@@ -135,6 +136,7 @@
     if (cue.fit) applyFit(el, cue);
     clampWidth(el, cue);
     mounted.set(idx, el);
+    if (window.__game) __game.onMount(idx, cue, el);
     return el;
   }
 
@@ -230,7 +232,10 @@
 
   function unmount(idx) {
     const el = mounted.get(idx);
-    if (el) { el.remove(); mounted.delete(idx); }
+    if (el) {
+      if (window.__game) __game.onUnmount(idx, el);
+      el.remove(); mounted.delete(idx);
+    }
   }
 
   /* ---------- iOS chrome stays white (whole video is white) ---------- */
@@ -257,6 +262,7 @@
       if (t >= c.s && t < c.e) update(i, c, t);
       else if (mounted.has(i)) unmount(i);
     }
+    if (window.__game) __game.tick();
   }
 
   /* ---------- main loop ---------- */
@@ -357,6 +363,7 @@
     document.body.classList.add("playing");
     broadcastBg("#ffffff");
     running = true;
+    if (window.__game) __game.start();
     audio.currentTime = 0;
     const p = audio.play();
     if (p && p.catch) p.catch(function (e) { console.warn("play blocked:", e); });
@@ -368,6 +375,7 @@
     running = false;
     stage.classList.remove("is-live");
     document.body.classList.remove("playing");
+    if (window.__game) __game.onEnd();
     endcard.hidden = false;
     requestAnimationFrame(function () { endcard.classList.add("is-visible"); });
   });
@@ -377,6 +385,7 @@
     stage.classList.add("is-live");
     document.body.classList.add("playing");
     running = true;
+    if (window.__game) __game.start();
     audio.load();                 // reliably rewinds to 0 even where seeking is blocked
     const p = audio.play();
     if (p && p.catch) p.catch(function () {});
@@ -403,6 +412,15 @@
       localStorage.setItem("yhm_sync", syncOffset.toFixed(3));
       toast("audio sync " + (syncOffset >= 0 ? "+" : "") + syncOffset.toFixed(2) + "s");
     }
+  });
+
+  /* ---------- the game rides on the engine ---------- */
+  if (window.__game) __game.init({
+    stage: stage,
+    cueLayer: cueLayer,
+    mounted: function () { return mounted; },
+    cues: function () { return CUES; },
+    time: function () { return clockOverride != null ? clockOverride : audio.currentTime; },
   });
 
   /* ---------- debug hooks ---------- */
