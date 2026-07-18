@@ -169,7 +169,8 @@
     const localT = t - cue.s;
 
     // strobe: only visible during the ON slice of each period
-    if (cue.strobe) {
+    // (strobeUntil: after that time the cue holds solid — the finale stops flashing and stays)
+    if (cue.strobe && (cue.strobeUntil == null || t < cue.strobeUntil)) {
       const on = cue.strobe[0], off = cue.strobe[1];
       const ph = localT % (on + off);
       if (ph >= on) { if (mounted.has(idx)) unmount(idx); return; }

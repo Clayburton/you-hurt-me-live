@@ -17,9 +17,9 @@
     pickaxe:  { e:"⛏️", name:"pickaxe",  dmg:3,  tier:3, reach:0.09 },                 // bites what it aims at
     knife:    { e:"🔪", name:"knife",    dmg:2,  tier:4, wrot:180, anim:"stab" },      // blade toward the strike
     sword:    { e:"🗡️", name:"sword",    dmg:5,  tier:4, wrot:90,  anim:"stab" },
-    saw:      { e:"🪚", name:"saw",      dmg:3,  tier:5, anim:"sawing", scar:0.5 },    // grinds — and nicks the wall
+    saw:      { e:"🪚", name:"saw",      dmg:3,  tier:5, anim:"sawing", scar:0.5 },    // grinds — light gray nicks
     dynamite: { e:"🧨", name:"dynamite", dmg:7,  tier:5, splash:0.16, splashDmg:1, scar:0.5 },
-    slugger:  { img:"assets/ding/slugger.png", name:"bat", dmg:12, tier:6, scar:1 },
+    slugger:  { img:"assets/ding/slugger.png", name:"bat", dmg:12, tier:6, scar:2 },   // full dots + strong cracks
     bomb:     { e:"💣", name:"bomb",     dmg:10, tier:6, splash:0.22, splashDmg:1, scar:2 },
   };
   const UPGRADES = {           // level → the two boxes
@@ -29,7 +29,7 @@
     5: ["saw", "dynamite"],
     6: ["slugger", "bomb"],
   };
-  const XP_NEED = [0, 40, 110, 240, 420, 700];  // cumulative XP to reach level 2..6
+  const XP_NEED = [0, 50, 140, 300, 520, 860];  // cumulative XP to reach level 2..6
   const PAR = [[45, 2], [85, 3], [125, 4], [165, 5]];  // rubber-band: behind par → 1.5x XP
   // later-song words where letters die one by one (killing a letter doesn't kill the word)
   const LETTERKILL = [113.647, 114.348, 116.483, 118.952, 165.301, 179.379, 183.083, 184.918, 186.82, 197.23];
@@ -43,7 +43,7 @@
     [72.639, 30],   // CHOICE.
     [95.696, 30],   // the giant strobing hey
     [165.301, 33],  // you hurt me (the hold)
-    [204.537, 45],  // WHY DON'T YOU SAY IT?
+    [204.537, 40],  // WHY DON'T YOU SAY IT? — each of the five words fights alone
   ];
   // gentle lyric flinch — ONLY the later walk-away lines, and barely (nothing is scared early)
   const FLINCH = [40.641, 92.459];
@@ -206,24 +206,29 @@
   }
 
   /* ---------- background scars (permanent — max tier only) ---------- */
-  function scar(x, y, size) {                       // 0.5 = a nick, 1 = a wound, 2 = a blast
+  function scar(x, y, size) {                       // 0.5 = faint gray nick, 1 = wound, 2 = the full blast
     const c = scarCtx;
-    const R = size >= 2 ? 90 : size >= 1 ? 55 : 20;
-    const soot = size >= 2 ? 26 : size >= 1 ? 14 : 4;
+    const tiny = size < 1;
+    const R = size >= 2 ? 90 : size >= 1 ? 55 : 14;
+    const soot = size >= 2 ? 26 : size >= 1 ? 14 : 3;
     const cracks = size >= 2 ? 7 : size >= 1 ? 4 : 1;
-    const seg = size >= 2 ? 34 : size >= 1 ? 18 : 9;
+    const seg = size >= 2 ? 34 : size >= 1 ? 18 : 6;
     c.save();
     c.translate(x, y);
     for (let i = 0; i < soot; i++) {
       const a = Math.random() * 6.283, d = Math.random() * R;
-      c.fillStyle = "rgba(0,0,0," + (0.04 + Math.random() * 0.12) + ")";
-      const s = 2 + Math.random() * (size >= 2 ? 14 : size >= 1 ? 8 : 4);
+      c.fillStyle = tiny
+        ? "rgba(120,120,120," + (0.06 + Math.random() * 0.08) + ")"      // soft gray dust
+        : "rgba(0,0,0," + (0.04 + Math.random() * 0.12) + ")";           // the dots
+      const s = 2 + Math.random() * (size >= 2 ? 14 : size >= 1 ? 8 : 3);
       c.fillRect(Math.cos(a) * d - s / 2, Math.sin(a) * d - s / 2, s, s);
     }
     for (let i = 0; i < cracks; i++) {
       let a = Math.random() * 6.283, px = 0, py = 0;
-      c.strokeStyle = "rgba(0,0,0," + (0.5 + Math.random() * 0.4) + ")";
-      c.lineWidth = size >= 1 && Math.random() < 0.3 ? 2 : 1;
+      c.strokeStyle = tiny
+        ? "rgba(140,140,140," + (0.22 + Math.random() * 0.14) + ")"      // hairline gray scratch
+        : "rgba(0,0,0," + (0.5 + Math.random() * 0.4) + ")";             // the strong lines
+      c.lineWidth = !tiny && Math.random() < 0.3 ? 2 : 1;
       c.beginPath(); c.moveTo(0, 0);
       const segs = 4 + (Math.random() * 4 | 0);
       for (let sgi = 0; sgi < segs; sgi++) {
@@ -326,11 +331,12 @@
       const ws = w || wordState(idx, cue, el);
       const ev = ws.evade;
       if (d < R && d > 1) {
-        // at the later levels the words will run all the way to the edges
-        const push = flinch && lvl < 3 ? 5 : [0, 0, 0, 8, 16, 90, 150][lvl];
+        // at the later levels the words run — at max, all the way across the page
+        const push = flinch && lvl < 3 ? 5 : [0, 0, 0, 8, 16, 90, 400][lvl];
         const k = (1 - d / R) * push;
-        ev.x += ((dx / d) * k - ev.x) * 0.16;
-        ev.y += ((dy / d) * k - ev.y) * 0.16;
+        const resp = lvl >= 6 ? 0.28 : 0.16;
+        ev.x += ((dx / d) * k - ev.x) * resp;
+        ev.y += ((dy / d) * k - ev.y) * resp;
       } else {
         ev.x *= 0.9; ev.y *= 0.9;
       }

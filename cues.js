@@ -351,7 +351,14 @@ C({ s:199.065, e:199.499, text:"oh", role:"sans", weight:400, size:6.6, y:53.5 }
 C({ s:199.799, e:200.233, text:"oh", role:"sans", weight:400, size:5.7, y:53.5 });
 IMG(201.634,201.734,"tinyman",4.7,55.5);
 IMG(202.635,202.735,"tinyman",4.7,55.5);
-C({ s:204.537, e:207.842, text:"WHY DON'T YOU SAY IT?", role:"cond", weight:900, fit:0.97, y:50, strobe:[0.3675,0.3675] });
+/* the finale: five separate words to defeat — they strobe with the song,
+   then HOLD until each is killed or the video ends */
+[["WHY", 12.47, 0.185], ["DON'T", 35.7, 0.24], ["YOU", 57.29, 0.158],
+ ["SAY", 74.89, 0.152], ["IT?", 90.65, 0.121]].forEach(function (wd) {
+  C({ s:204.537, e:219.30, text:wd[0], role:"cond", weight:900,
+      fit:wd[2], fitH:0.27, stretch:0.62, x:wd[1], y:50,
+      strobe:[0.3675,0.3675], strobeUntil:207.842 });
+});
 
 /* white to the end (song runs out ~219.6s) */
 
@@ -385,6 +392,5 @@ const CAL = {
   238:{sy:0.91},
   239:{size:3.6}, 240:{size:3.4}, 243:{size:4.1}, 244:{size:3.5},
   257:{size:8.2}, 259:{size:4.9},
-  262:{fit:0.98,fitH:0.27,stretch:0.62},
 };
 for (const k in CAL) Object.assign(CUES[k], CAL[k]);
