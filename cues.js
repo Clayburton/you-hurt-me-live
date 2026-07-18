@@ -174,7 +174,7 @@ C({ s:118.952, e:119.453, text:"yeah", role:"serif", weight:700, x:57, y:70, anc
 /* ---------- AND IT FEELS GOOD (condensed serif strobes) ---------- */
 const AIF = { role:"didone", weight:500, stretch:0.62, y:50, noClamp:true };
 C(Object.assign({ s:123.857, e:124.825, text:"AND IT FEELS GOOD", fit:0.97, fitH:0.15 }, AIF));
-C(Object.assign({ s:124.925, e:125.425, text:"AND IT FEELS GOOD", fit:0.97, fitH:0.15, strobe:[0.105,0.100] }, AIF));
+C(Object.assign({ s:124.925, e:125.425, text:"AND IT FEELS GOOD", fit:0.97, fitH:0.15, strobe:[0.1001,0.1001] }, AIF));
 C(Object.assign({ s:125.526, e:125.626, text:"AND IT FEELS GOOD TO",     fit:0.97, fitH:0.15 }, AIF));
 C(Object.assign({ s:125.726, e:125.826, text:"AND IT FEELS GOOD TO YOU", fit:0.97, fitH:0.15 }, AIF));
 C(Object.assign({ s:125.926, e:127.028, text:"AND IT FEELS GOOD TO YOU", fit:0.97, fitH:0.15, strobe:[0.1001,0.1001] }, AIF));
@@ -190,7 +190,7 @@ C({ s:133.166, e:133.667, role:"didone", weight:400, size:40, y:49, noClamp:true
 C({ s:133.734, e:135.001, text:"when you say", role:"sans", weight:400, fit:0.42, y:51.5 });
 C({ s:135.168, e:135.301, text:"YOU'LL",       role:"didone", weight:700, fit:0.23, y:50 });
 C({ s:135.435, e:135.568, text:"YOU'LL NEVER", role:"didone", weight:700, fit:0.46, y:50 });
-C({ s:135.702, e:137.170, text:"YOU'LL NEVER CHANGE", role:"didone", weight:700, fit:0.74, y:50, strobe:[0.135,0.132] });
+C({ s:135.702, e:137.170, text:"YOU'LL NEVER CHANGE", role:"didone", weight:700, fit:0.74, y:50, strobe:[0.1335,0.1335] });
 C({ s:137.403, e:138.271, text:"WHEN YOU SAY", role:"sans", weight:300, track:0.24, fit:0.51, y:50 });
 
 // blast 1: YOU'LL NEVER CHANGE through the weights
@@ -351,7 +351,7 @@ C({ s:199.065, e:199.499, text:"oh", role:"sans", weight:400, size:6.6, y:53.5 }
 C({ s:199.799, e:200.233, text:"oh", role:"sans", weight:400, size:5.7, y:53.5 });
 IMG(201.634,201.734,"tinyman",4.7,55.5);
 IMG(202.635,202.735,"tinyman",4.7,55.5);
-C({ s:204.537, e:207.842, text:"WHY DON'T YOU SAY IT?", role:"cond", weight:900, fit:0.97, y:50, strobe:[0.37,0.365] });
+C({ s:204.537, e:207.842, text:"WHY DON'T YOU SAY IT?", role:"cond", weight:900, fit:0.97, y:50, strobe:[0.3675,0.3675] });
 
 /* white to the end (song runs out ~219.6s) */
 
