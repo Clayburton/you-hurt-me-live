@@ -3,23 +3,29 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <!-- iOS Safari tints its status bar + toolbar to match this; the player flips it to #000 for the final act -->
   <meta name="theme-color" content="#ffffff" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>you hurt me — clay and kelsy</title>
 
-  <!-- brand faces: Courier Prime (mono nav) + Playfair (the title) -->
+  <!-- the video's exact faces: Adobe Fonts kit (Helvetica Neue LT Pro, Clarendon URW,
+       Arial Rounded, Stencil, Rosewood, Cottonwood, HWT Artz, Brush Script, Felt Tip,
+       Letter Gothic, Prestige Elite, LTC Bodoni 175, Marcel Script) -->
+  <link rel="stylesheet" href="https://use.typekit.net/moh2jyv.css">
+
+  <!-- Bodoni (roman + italic, all weights) + brand mono + landing serif + one scratchy hand -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,500&family=Rock+Salt&display=block" rel="stylesheet" />
 
-  <link rel="stylesheet" href="styles.css?v=13" />
+  <link rel="stylesheet" href="styles.css?v=1" />
 </head>
 <body>
-  <!-- ============ THE PLAYER ============ -->
+  <!-- ============ THE STAGE ============ -->
   <div id="stage" class="stage" aria-hidden="true">
-    <video id="film" class="film" playsinline preload="metadata"></video>
+    <div id="cueLayer" class="cue-layer"></div>
   </div>
+
+  <audio id="song" src="assets/you-hurt-me.mp3" preload="auto"></audio>
 
   <!-- ============ LANDING ============ -->
   <section id="landing" class="landing">
@@ -38,6 +44,9 @@
     <button id="replayBtn" class="endcard__btn" type="button">[ replay ]</button>
   </section>
 
-  <script src="app.js?v=14"></script>
+  <div id="toast" class="toast" role="status"></div>
+
+  <script src="cues.js?v=9"></script>
+  <script src="app.js?v=3"></script>
 </body>
 </html>
