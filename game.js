@@ -62,7 +62,9 @@
      Keyed off the REAL pointer type, not a media query, so a mouse always keeps
      the desktop behaviour (and a touchscreen laptop gets both, correctly). */
   let touchMode = false;
-  const WSCALE = 1.34, WLIFT = 34;
+  // WLIFT 14 puts the weapon's bottom edge right at the fingertip (the -72% transform
+  // already hangs 28% of its height below the anchor), so it reads as held, not floating.
+  const WSCALE = 1.5, WLIFT = 14;
   let wBasePx = 37;
   function placeWeapon(x, y) {
     weaponEl.style.left = x + "px";
