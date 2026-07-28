@@ -128,7 +128,11 @@ body.wtouch #weapon { transition: opacity .42s ease .06s, font-size .25s ease; }
 body.wtouch #weapon.is-here { opacity: 0; }                                  /* hover reveals nothing */
 body.wtouch #weapon.is-touch { opacity: 1; transition: opacity .06s ease; }  /* snaps into your hand */
 
-#scars { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+/* The damage sits ABOVE the lyrics and inverts whatever it crosses (difference blend,
+   painted in white — see scar() ). On the white page it reads as black soot and cracks
+   exactly as before; where it crosses black type the type turns white instead of being
+   swallowed, so the lyrics stay readable no matter how black the background gets. */
+#scars { position: absolute; inset: 0; z-index: 5; pointer-events: none; mix-blend-mode: difference; }
 
 .gch { display: inline-block; }               /* letters take wounds one by one */
 .g-dead { transition: transform .35s ease-in, opacity .3s ease-in; transform: scale(.86) rotate(5deg); opacity: 0 !important; }

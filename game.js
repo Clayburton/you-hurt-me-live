@@ -145,8 +145,11 @@
     best.style.clipPath =
       "polygon(0 0,100% 0,100% 100%,0 100%,0 " + by + "%," + bx + "% " + by + "%," +
       (bx + r * 0.6) + "% " + (by + r) + "%," + Math.max(0, bx - r * 0.4) + "% " + (by + r * 0.5) + "%,0 " + (by + r * 0.8) + "%)";
-    // and the letter burns redder with every hit
-    best.style.color = ["#000", "#7a0000", "#b40000", "#e00000", "#ff1a00"][Math.min(n, 4)];
+    // and the letter chars away with every hit — greying toward ash. Monochrome on
+    // purpose: the damage layer inverts whatever it crosses, and a red letter would
+    // invert to cyan (red's exact complement). Grey inverts to grey, so a wounded
+    // letter stays legible on the white page AND inside the blackest damage.
+    best.style.color = ["#000", "#3a3a3a", "#5c5c5c", "#7d7d7d", "#9a9a9a"][Math.min(n, 4)];
     if (n >= 4) best.style.opacity = Math.max(0.3, 1 - 0.14 * n);
     return best;
   }
@@ -232,6 +235,9 @@
   }
 
   /* ---------- background scars (permanent — max tier only) ---------- */
+  /* Painted INVERTED (white on the canvas) and composited with mix-blend-mode:difference,
+     so every mark inverts what's under it: black soot/cracks on the white page, but the
+     lyrics turn white instead of vanishing where the damage crosses them. */
   function scar(x, y, size) {                       // 0.5 = faint gray nick, 1 = wound, 2 = the full blast
     const c = scarCtx;
     const tiny = size < 1;
@@ -244,16 +250,16 @@
     for (let i = 0; i < soot; i++) {
       const a = Math.random() * 6.283, d = Math.random() * R;
       c.fillStyle = tiny
-        ? "rgba(120,120,120," + (0.06 + Math.random() * 0.08) + ")"      // soft gray dust
-        : "rgba(0,0,0," + (0.04 + Math.random() * 0.12) + ")";           // the dots
+        ? "rgba(135,135,135," + (0.06 + Math.random() * 0.08) + ")"      // soft gray dust (inverted)
+        : "rgba(255,255,255," + (0.04 + Math.random() * 0.12) + ")";     // the dots (inverted → black)
       const s = 2 + Math.random() * (size >= 2 ? 14 : size >= 1 ? 8 : 3);
       c.fillRect(Math.cos(a) * d - s / 2, Math.sin(a) * d - s / 2, s, s);
     }
     for (let i = 0; i < cracks; i++) {
       let a = Math.random() * 6.283, px = 0, py = 0;
       c.strokeStyle = tiny
-        ? "rgba(140,140,140," + (0.22 + Math.random() * 0.14) + ")"      // hairline gray scratch
-        : "rgba(0,0,0," + (0.5 + Math.random() * 0.4) + ")";             // the strong lines
+        ? "rgba(115,115,115," + (0.22 + Math.random() * 0.14) + ")"      // hairline gray scratch (inverted)
+        : "rgba(255,255,255," + (0.5 + Math.random() * 0.4) + ")";       // the strong lines (inverted → black)
       c.lineWidth = !tiny && Math.random() < 0.3 ? 2 : 1;
       c.beginPath(); c.moveTo(0, 0);
       const segs = 4 + (Math.random() * 4 | 0);
