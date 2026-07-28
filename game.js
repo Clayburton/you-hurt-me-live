@@ -57,6 +57,30 @@
 
   let bridge, stage, cueLayer, weaponEl, scarCtx, scarCv, lvlEl;
 
+  /* TOUCH: a finger has no hover, so the weapon only shows while it's held down —
+     bigger (it must read at arm's length) and lifted clear of the fingertip.
+     Keyed off the REAL pointer type, not a media query, so a mouse always keeps
+     the desktop behaviour (and a touchscreen laptop gets both, correctly). */
+  let touchMode = false;
+  const WSCALE = 1.34, WLIFT = 34;
+  let wBasePx = 37;
+  function placeWeapon(x, y) {
+    weaponEl.style.left = x + "px";
+    weaponEl.style.top = (y - (touchMode ? WLIFT : 0)) + "px";
+  }
+  function weaponSize(px) {
+    wBasePx = px;
+    weaponEl.style.fontSize = Math.round(px * (touchMode ? WSCALE : 1)) + "px";
+  }
+  function noteTouch(e) {                     // first real finger flips the piece into touch mode
+    if (touchMode || !e || e.pointerType !== "touch") return;
+    touchMode = true;
+    document.body.classList.add("wtouch");    // only now does any touch styling exist
+    weaponEl.classList.remove("is-here");     // a hover state means nothing to a finger
+    weaponSize(wBasePx);                      // re-apply at finger scale
+  }
+  function showWeaponTouch(on) { weaponEl.classList.toggle("is-touch", !!on); }
+
   /* ---------- word state ---------- */
   function wordState(idx, cue, el) {
     let w = st.words.get(idx);
@@ -194,7 +218,7 @@
     st.choosing = null;
     lvlEl.classList.remove("is-on");
     weaponEl.innerHTML = weaponFace(st.weapon, true);
-    weaponEl.style.fontSize = (34 + 3 * st.weapon.tier) + "px";
+    weaponSize(34 + 3 * st.weapon.tier);
     if (st.level >= 6) {                    // the top of the ladder
       clearTimeout(lvlEl._t);
       setTimeout(function () {
@@ -380,10 +404,10 @@
 
       window.addEventListener("pointermove", function (e) {
         st.ptr.x = e.clientX; st.ptr.y = e.clientY;
+        noteTouch(e);
         if (st.on) {
-          weaponEl.style.left = e.clientX + "px";
-          weaponEl.style.top = e.clientY + "px";
-          weaponEl.classList.add("is-here");
+          placeWeapon(e.clientX, e.clientY);
+          if (e.pointerType !== "touch") weaponEl.classList.add("is-here");   // hover = mouse only
           // drag = keep hurting: swipe a word to slash it (this is how fingers fight)
           if (st.drag) {
             const dx = e.clientX - st.drag.x, dy = e.clientY - st.drag.y;
@@ -400,14 +424,15 @@
       stage.addEventListener("pointerdown", function (e) {
         if (!st.on) return;
         st.ptr.x = e.clientX; st.ptr.y = e.clientY;
+        noteTouch(e);
         st.drag = { x: e.clientX, y: e.clientY, acc: 0 };
-        weaponEl.style.left = e.clientX + "px";
-        weaponEl.style.top = e.clientY + "px";
+        placeWeapon(e.clientX, e.clientY);
+        if (e.pointerType === "touch") showWeaponTouch(true);   // the weapon appears in your hand
         strike(e.clientX, e.clientY);
         e.preventDefault();
       });
-      window.addEventListener("pointerup", function () { st.drag = null; });
-      window.addEventListener("pointercancel", function () { st.drag = null; });
+      window.addEventListener("pointerup", function () { st.drag = null; showWeaponTouch(false); });
+      window.addEventListener("pointercancel", function () { st.drag = null; showWeaponTouch(false); });
       // the song is over, but you can keep wrecking the background (plain cursor now)
       document.getElementById("endcard").addEventListener("pointerdown", function (e) {
         if (!st.endMode) return;
@@ -425,7 +450,7 @@
       scarCtx.clearRect(0, 0, scarCv.width, scarCv.height);
       lvlEl.classList.remove("is-on");
       weaponEl.innerHTML = weaponFace(WEAPONS.fist, true);
-      weaponEl.style.fontSize = "37px";
+      weaponSize(37);
       document.body.classList.add("gaming");
     },
     onMount: function (idx, cue, el) {
@@ -447,6 +472,7 @@
       st.drag = null;
       document.body.classList.remove("gaming");      // plain cursor on the go-back page
       weaponEl.classList.remove("is-here");          // the weapon bows out
+      showWeaponTouch(false);
       const v = document.getElementById("verdict");
       if (v) {
         if (st.hits > 0) {

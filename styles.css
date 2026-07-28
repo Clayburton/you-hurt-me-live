@@ -120,7 +120,13 @@ body.playing { overscroll-behavior: none; touch-action: none; }
   25% { transform: translate(calc(-30% - 8px), calc(-72% - 8px)) rotate(-8deg); }
   75% { transform: translate(calc(-30% + 8px), calc(-72% + 8px)) rotate(-8deg); }
 }
-@media (pointer: coarse) { #weapon { display: none !important; } }
+/* TOUCH: there's no hover on a finger, so the weapon appears the instant you touch
+   down, rides your finger while you slash, and fades away when you let go — that's
+   what makes it obvious you're holding something. `body.wtouch` is added by the game
+   only after a real touch event, so a mouse never sees any of this. */
+body.wtouch #weapon { transition: opacity .42s ease .06s, font-size .25s ease; }
+body.wtouch #weapon.is-here { opacity: 0; }                                  /* hover reveals nothing */
+body.wtouch #weapon.is-touch { opacity: 1; transition: opacity .06s ease; }  /* snaps into your hand */
 
 #scars { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
 
